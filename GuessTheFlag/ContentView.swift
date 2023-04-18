@@ -23,10 +23,12 @@ extension View {
 
 struct ContentView: View {
     @State private var showingScore = false
+    @State private var gameOver = false
     @State private var scoreTitle = ""
     @State private var scoreTotal = 0
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
+    @State private var turn = 8
     
     var body: some View {
         ZStack {
@@ -53,7 +55,7 @@ struct ContentView: View {
                             .font(.largeTitle.weight(.semibold))
                     }
                     
-                    ForEach(0..<3) { number in
+                    ForEach(0..<5) { number in
                         Button {
                             flagTapped(number)
                         } label: {
@@ -71,19 +73,32 @@ struct ContentView: View {
                 Spacer()
                 Spacer()
                 
-                Text("Score: \(scoreTotal)")
+                HStack {
+                    Text("Score: \(scoreTotal)")
                     .foregroundColor(.white)
                     .font(.title.bold())
-                
+                    .padding()
+                    
+                    Text("Turns: \(turn)")
+                    .foregroundColor(.white)
+                    .font(.title.bold())
+                }
                 Spacer()
             }
             .padding()
         }
         .alert(scoreTitle, isPresented: $showingScore) {
             Button("Continue", action: askQuestion)
-        } message: {
-            Text("Your score is \(scoreTotal)")
+            } message: {
+                Text("Your score is \(scoreTotal)")
+            }
+        .alert(scoreTitle, isPresented: $gameOver) {
+            Button("Restart", action: askQuestion)
+            } message: {
+                Text("Your score: \n\(scoreTotal)")
         }
+        
+    
     }
     
     func flagTapped(_ number: Int) {
@@ -91,15 +106,32 @@ struct ContentView: View {
             scoreTitle = "Correct"
             scoreTotal = scoreTotal + 1
         } else {
-            scoreTitle = "Wrong"
+            scoreTitle = "Wrong,that's the flag of \(countries[number])"
             scoreTotal = scoreTotal - 2
         }
+        
+        turn -= 1
         showingScore = true
+        
+        if turn == 0 {
+            showingScore = false
+            scoreTitle = "Game Over!"
+            gameOver = true
+        }
+    }
+    
+    func reset() {
+        gameOver = false
+        turn = 8
+        scoreTotal = 0
     }
     
     func askQuestion() {
+        if turn == 0 { reset() }
+        else {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+        }
     }
 }
 
